@@ -13,7 +13,7 @@ bool BasisShell::operator==(const BasisShell& rhs)const noexcept
 size_t BasisShell::nfunctions(size_t i)const noexcept
 {
     const size_t temp_l=am_2int(l,i);
-    if(type==ShellType::CartesianGaussian)return 2*temp_l+1;
+    if(type!=ShellType::CartesianGaussian)return 2*temp_l+1;
     return multinomial_coefficient(3ul,temp_l);
 }
 
