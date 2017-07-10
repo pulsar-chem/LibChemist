@@ -1,0 +1,8 @@
+install.sh
+Debug/
+Release/
+*.config
+*.creator
+*.creator.user
+*.files
+*.includes
