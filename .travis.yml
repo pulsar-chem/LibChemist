@@ -12,8 +12,8 @@ matrix:
         packages:
         - cmake
         - cmake-data
-        - g++-4.9
-    env: CXX_COMPILER='g++-4.9'
+        - g++-5
+    env: CXX_COMPILER='g++-5'
 install:
 - cmake -version
 - sudo apt-get install --yes doxygen graphviz
