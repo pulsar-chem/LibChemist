@@ -13,11 +13,16 @@
 #    - travis encrypt-file bin/travisci_rsa --add
 #    - rm bin/travisci_rsa (we are going to upload the encrypted version)
 #    - mv travisci_rsa.enc bin (I don't know why it doesn't put it there...)
-
+#    - modify the lines Travis added to .travis.yml with *.enc 's new path
+# 3. Make sure this script's HTML_PATH matches doxygen's output path
+# 4. Make sure the Travis file has a line:
+#    after_success:
+#    - ./config/publish-doxygen
+# 5. 
 
 # Settings
 REPO_PATH=git@github.com:pulsar-chem/LibChemist.git
-HTML_PATH=html
+HTML_PATH=doc/html
 COMMIT_USER="Documentation Builder"
 CHANGESET=$(git rev-parse --verify HEAD)
 
@@ -32,7 +37,7 @@ git rm -rf .
 cd -
 
 # Generate the HTML documentation.
-doxygen
+doxygen bin/Doxyfile
 
 # Create and commit the documentation repo.
 cd ${HTML_PATH}
