@@ -28,6 +28,6 @@ before_install:
 - openssl aes-256-cbc -K $encrypted_6ba2bac98a17_key -iv $encrypted_6ba2bac98a17_iv
   -in bin/travisci_rsa.enc -out bin/travisci_rsa -d
 - chmod 0600 bin/travisci_rsa
-- cp config/travisci_rsa ~/.ssh/id_rsa
+- cp bin/travisci_rsa ~/.ssh/id_rsa
 after_success:
 - ./bin/publish-doxygen.sh
