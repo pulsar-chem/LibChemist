@@ -65,7 +65,10 @@ public:
          * \param[in] cov_raidus The covalent radius of the atom
          * \param[in] vdw_radius The Van der Waals radius of the atom
          *
-         * \throws No throw guarantee.
+         * \throws None No throw guarantee.
+         *
+         * \threading Generally thread safe although data in \p xyz is accessed
+         * and concurrent writes to \p xyz may result in data races.
          *
          */
     Atom(const std::array<double,3>& xyz, double Z_, size_t isotope_,
@@ -75,9 +78,9 @@ public:
 
     /** \brief Makes an instance where all values are in an unitialized state.
      *
+     *   \throws None No throw guarantee.
      *
-     *
-     *   \throws No throw guarantee.
+     *   \threading Thread safe.
      */
     Atom()noexcept=default;
 
@@ -87,6 +90,9 @@ public:
      *
      *  \throws std::bad_alloc if memory allocation fails.  Strong throw
      *  guarantee.
+     *
+     *  \threading All elements of \p other are accessed and data races may
+     *  occur if \p other is concurrently modified.
      */
     Atom(const Atom& /*other*/)=default;
 
@@ -96,7 +102,9 @@ public:
      *
      * \note After this call \p other is in a valid, but undefined state.
      *
-     * \throws No throw guarantee.
+     * \throws None No throw guarantee.
+     *
+     * \threading All elements of \p other are accessed and modified.
      */
     Atom(Atom&& /*other*/)noexcept=default;
 
@@ -104,9 +112,15 @@ public:
     /** \brief Adds a basis set shell to the atom.
      *
      *  \param[in] bs_name Which basis set to add the shell to.
+     *
      *  \param[in] shell The shell to add.
+     *
      *  \throws std::bad_alloc if memory allocation fails.  Strong throw
      *  guarantee.
+     *
+     *  \threading Internal data pertaining to basis sets is modified and may
+     *  cause data races if the user tries to access that information
+     *  concurrently.
      *
      */
     void add_shell(const std::string& bs_name, const BasisShell& shell)
@@ -115,7 +129,7 @@ public:
         bs.push_back(shell);
     }
 
-    /** \brief Returns the requested basis set.
+    /** \brief Returns the requested basis set as a deep copy.
      *
      * \param[in] bs_name The name of the basis set from which the shells will
      *                    be taken.
@@ -125,6 +139,9 @@ public:
      *          instance is returned.
      *
      * \throws std::bad_alloc if there is insufficient memory.
+     *
+     * \threading Generally thread safe although data races may occur if there
+     * are concurrent calls to add_shell.
      */
     BasisSet get_basis(const std::string& bs_name)const
     {
@@ -139,17 +156,27 @@ public:
     /** \brief Assigns a deep copy of another Atom instance to this instance
      *
      *  \param[in] rhs The Atom instance to deep copy.
+     *
+     *  \returns The current instance after copying \p rhs.
+     *
      *  \throws std::bad_alloc if memory allocation fails.  Strong throw
      *          guarantee.
-     *  \returns The current instance after copying \p rhs.
+     *
+     *  \threading All members of \p rhs are accessed and data races may occur
+     *  if \p rhs is concurrently modified.
      */
     Atom& operator=(const Atom& /*rhs*/)=default;
 
     /** \brief Assigns another Atom instance's data to this instance.
      *
      *  \param[in] rhs The Atom instance to take ownership of.
-     *  \throws No throw guarantee.
+     *
      *  \returns The current instance after taking ownership of \p rhs.
+     *
+     *  \throws None No throw guarantee.
+     *
+     *  \threading All elements of \p rhs are accessed and modified.
+     *
      *  \note After this call \p rhs is in a valid, but undefined state.
      */
     Atom& operator=(Atom&& /*rhs*/)noexcept=default;
@@ -158,8 +185,13 @@ public:
      *     Atom instance.
      *
      *  \param[in] rhs The Atom instance to compare to.
+     *
      *  \returns True if \p rhs is exactly equal to this instance.
-     *  \throws No throw guarantee.
+     *
+     *  \throws None No throw guarantee.
+     *
+     * \threading All members of \p rhs are accessed, concurrent modification of
+     * \p rhs may result in data races.
      */
     bool operator==(const Atom& rhs)const noexcept;
 
@@ -167,9 +199,14 @@ public:
      *     Atom instance.
      *
      *  \param[in] rhs The Atom instance to compare to.
+     *
      *  \returns True if any member of this instance differs from the
      *    corresponding member of \p rhs.
-     *  \throws No throw guarantee.
+     *
+     *  \throws None No throw guarantee.
+     *
+     *  \threading All members of \p rhs are accessed.  Concurrent writes to
+     *  \p rhs may result in data races.
      */
     bool operator!=(const Atom& rhs)const noexcept
     {
@@ -193,6 +230,9 @@ public:
  *
  * \throws  std::out_of_range if Z does not correspond to a known atom.  Strong
  *          throw guarantee.
+ *
+ * \threading Members of \p xyz are accessed and concurrent modifciation of
+ * \p xyz may result in data races.
  */
 Atom create_atom(const std::array<double,3>& xyz, size_t Z);
 
@@ -210,6 +250,9 @@ Atom create_atom(const std::array<double,3>& xyz, size_t Z);
  * \throws  std::out_of_range if Z does not correspond to a known atom or if
  *   that atom does not contain an isotope with the requested isotope number.
  *   Strong throw guarantee.
+ *
+ * \threading Members of \p xyz are accessed and concurrent modification of
+ * \p xyz may result in data races.
  */
 Atom create_atom(const std::array<double,3>& xyz,size_t Z, size_t isonum);
 
@@ -222,8 +265,13 @@ Atom create_atom(const std::array<double,3>& xyz,size_t Z, size_t isonum);
  * modify the copy's internal data so that it is a ghost atom.
  *
  * \param[in] atom The Atom to turn into a ghost atom.
+ *
  * \returns A deep copy of \p atom that is a ghost atom.
- * \throws No throw guarantee.
+ *
+ * \throws None. No throw guarantee.
+ *
+ * \threading All members of \p atom are accessed and data races may result if
+ * \p atom is concurrently modified.
  */
 Atom create_ghost(const Atom& atom)noexcept;
 
@@ -236,8 +284,13 @@ Atom create_ghost(const Atom& atom)noexcept;
  * ghost atom, but rather rely on this function.
  *
  * \param[in] atom The Atom instance to evaluate for its ghost-ness
+ *
  * \returns True if \p atom is a ghost atom.
- * \throws No throw guarantee.
+ *
+ * \throws None. No throw guarantee.
+ *
+ * \threading Members of \p atom are accessed and data races may result if
+ * \p atom is concurrently modified.
  */
 bool is_ghost_atom(const Atom& atom)noexcept;
 
@@ -248,8 +301,13 @@ bool is_ghost_atom(const Atom& atom)noexcept;
  * or basis functions.  In other words they are points in space.
  *
  * \param[in] xyz Where in space the dummy atom is located.
+ *
  * \returns A new Atom instance that is a dummy atom.
- * \throws No throw guarantee.
+ *
+ * \throws None No throw guarantee.
+ *
+ * \threading All members of \p xyz are accessed and data races may occur if
+ * \p xyz is subsequently modified.
  */
 Atom create_dummy(const std::array<double,3>& xyz)noexcept;
 
@@ -262,8 +320,13 @@ Atom create_dummy(const std::array<double,3>& xyz)noexcept;
  * dummy atom, but rather rely on this function.
  *
  * \param[in] atom The Atom instance to evaluate for its stupidity
+ *
  * \returns True if \p atom is a dummy atom.
- * \throws No throw guarantee.
+ *
+ * \throws None No throw guarantee.
+ *
+ * \threading Members of \p atom are accessed and data races may result if
+ *  \p atom is concurrently modified.
  */
 bool is_dummy_atom(const Atom& atom)noexcept;
 
@@ -275,8 +338,13 @@ bool is_dummy_atom(const Atom& atom)noexcept;
  *
  * \param[in] xyz Where in space the point charge is located.
  * \param[in] chg The charge (in A.U.) of the point charge
+ *
  * \returns A new Atom instance that is a point charge.
- * \throws No throw guarantee.
+ *
+ * \throws None No throw guarantee.
+ *
+ * \threading \p xyz is accessed and concurrent modifications to \p xyz may
+ * result in data races.
  */
 Atom create_charge(const std::array<double,3>& xyz,double chg)noexcept;
 
@@ -289,8 +357,13 @@ Atom create_charge(const std::array<double,3>& xyz,double chg)noexcept;
  * point charge, but rather rely on this function.
  *
  * \param[in] atom The Atom instance to evaluate for its point charged-ness
+ *
  * \returns True if \p atom is a point charge.
- * \throws No throw guarantee.
+ *
+ * \throws None No throw guarantee.
+ *
+ * \threading Members of \p atom are accessed and data races may result if
+ * \p atom is concurrently modified.
  */
 bool is_charge(const Atom& atom)noexcept;
 
@@ -301,9 +374,14 @@ bool is_charge(const Atom& atom)noexcept;
  * At the moment an Atom instance is a "real" atom if it is not a ghost atom,
  * dummy atom, or point charge.
  *
- * \param[in] atom The atom to assess for realness
+ * \param[in] atom The atom for whose realness is in question
+ *
  * \returns True if \p atom is a "real" atom.
- * \throws No throw guarantee.
+ *
+ * \throws None No throw guarantee.
+ *
+ * \threading Members of \p atom are accessed and data races may result if
+ * \p atom is concurrently modified.
  */
 bool is_real_atom(const Atom& atom)noexcept;
 

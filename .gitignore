@@ -1,6 +1,7 @@
 install.sh
 Debug/
 Release/
+doc/
 *.config
 *.creator
 *.creator.user

@@ -1,0 +1,61 @@
+#pragma once
+
+/** \file This file contains the machinery for parsing a basis set file.
+ * 
+ * Unfortunately there are a ton of different basis set file types.  At the
+ * end of the day they all look something like:
+ * 
+ * \verbatim
+   Header (comments, and other information)
+   
+   Start of an Atom
+   Shell 1
+   Shell 2
+   ...
+   Start of Next Atom
+   Shell 1
+   Shell 2
+   ...
+   
+   Footer
+   \endverbatim
+ * 
+ * Here's how this is going to work.  I'm going to loop over a file and give
+ * you a line.  You're going to tell me if that line is worth parsing by
+ * returning one of the atom_type enums: none, same_atom, new_atom.
+ * Respectively, these signal the line is not worth parsing, it is worth
+ * parsing and the resulting data is for the current atom, it is worth parsing
+ * but the data is for a new atom. (Note the first occurrence of parsable data
+ * should be signaled by new_atom).
+ * 
+ * For every parsable line you return an std::map<data_type,double> of the
+ * data you obtained from the line.
+ */
+
+
+namespace LibChemist {
+namespace detail_ {
+    enum class atom_type{none,new_atom,new_shell,same_shell};
+    enum class data_type{exponent,coefficient,angular_momentum,Z};
+}
+
+
+/** \brief This class abstracts away the layout of the basis set file
+ */
+struct BasisSetFileLayout
+{
+    virtual detail_::atom_type worth_parsing(const std::string& line)const=0;
+    virtual std::map<detail_::data_type,double> parse(const std::string& line)const=0;
+};
+
+struct G94: public BasisSetFileLayout
+{
+    detail_::atom_type worth_parsing(const std::string& line)const override;
+    std::map<detail_::data_type,double> parse(const std::string& line)const override; 
+};
+
+
+std::map<size_t,std::vector<BasisShell>> 
+parse_basis_set_file(istream& is, const BasisSetFileLayout& parser);
+
+}

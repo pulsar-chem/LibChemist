@@ -1,0 +1,45 @@
+#pragma once
+
+namespace LibChemist {
+
+struct BasisPrimitive{
+    std::shared_ptr<std::vector<double>> params_;
+    double* param;
+    double* center;   
+};
+
+class BasisSet: public BasisPrimitive {
+    std::shared_ptr<std::vector<double>> coefs_;
+    std::vector<std::shared_ptr<BasisPrimitive>> functions;
+public:
+    void add_primitive(double* center,double coef,double param);
+};
+
+
+class Shell: public BasisSet {
+    std::vector<size_t> ngen_;
+public:
+    Shell(double* center, double l, double* coefs, double* alphas, size_t nprim);
+    Shell(double* center, double)
+};
+
+
+
+
+struct Shell: public AtomCenteredBasisFunction {
+    int* l;
+    double* coefs_;
+};
+
+class BasisSet {
+    std::vector<AtomCenteredBasisFunction> basisfunctions_;
+public:
+    void add_function(double* center,double exponent, double coef);
+    void add_general(double* center,double e)
+};
+
+
+
+
+
+}
